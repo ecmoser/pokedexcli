@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
+
+	pokecache "github.com/ecmoser/pokedexcli/internal/pokecache"
 )
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, *pokecache.Cache, ...string) error
 }
 
 type config struct {
@@ -40,6 +43,11 @@ func getCommands() map[string]cliCommand {
 			description: "Displays the previous 20 locations",
 			callback:    CommandMapb,
 		},
+		"explore": {
+			name:        "explore",
+			description: "List all pokemon in a specific location",
+			callback:    CommandExplore,
+		},
 	}
 }
 
@@ -49,13 +57,13 @@ func CleanInput(input string) []string {
 	return words
 }
 
-func commandExit(c *config) error {
+func commandExit(c *config, cache *pokecache.Cache, args ...string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(c *config) error {
+func commandHelp(c *config, cache *pokecache.Cache, args ...string) error {
 	helpMsg := "Welcome to the Pokedex!\nUsage:\n\n"
 	for _, command := range getCommands() {
 		helpMsg += fmt.Sprintf("%s: %s\n", command.name, command.description)
@@ -70,6 +78,7 @@ func main() {
 		previous: "",
 		next:     "https://pokeapi.co/api/v2/location-area?offset=0",
 	}
+	cache := pokecache.NewCache(5 * time.Second)
 	for {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
@@ -81,7 +90,7 @@ func main() {
 				continue
 			}
 			if command.name == cleanText[0] {
-				if err := command.callback(&initConfig); err != nil {
+				if err := command.callback(&initConfig, cache, cleanText[1:]...); err != nil {
 					fmt.Println(err)
 				}
 				handlerFound = true
