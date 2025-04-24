@@ -98,6 +98,15 @@ func CommandInspect(c *config, cache *pokecache.Cache, args ...string) error {
 	return nil
 }
 
+func CommandPokedex(c *config, cache *pokecache.Cache, args ...string) error {
+	output := "\nYour Pokedex:\n"
+	for pokemonName := range pokemonList {
+		output += " - " + pokemonName + "\n"
+	}
+	fmt.Println(output)
+	return nil
+}
+
 func throwPokeball(pokemon pokemonData) bool {
 	baseExp := pokemon.BaseExperience
 	baseChance := int(math.Sqrt(float64(baseExp)))
